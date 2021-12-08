@@ -1,11 +1,7 @@
 ﻿using ConsumindoWS.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ConsumindoWS.Controllers
 {
@@ -17,10 +13,30 @@ namespace ConsumindoWS.Controllers
         {
             _logger = logger;
         }
-
-        public IActionResult Index()
+        [HttpPost]
+        public IActionResult Index(Models.Cep cep)
         {
-            return View();
+            if (!ModelState.IsValid)
+            { 
+            return View(cep);
+            }
+            using (Correios.AtendeClienteClient correios = new Correios.AtendeClienteClient())
+            {
+                var consulta = correios.consultaCEPAsync(cep.Codigo.Replace("-", ""));
+
+                if (consulta != null)
+                {
+                    ViewBag.Endereco = new Models.Endereco()
+                    {
+                        Descricao = consulta.end,
+                        Complemento = consulta.complemento,
+                        Bairro = consulta.bairro,
+                        Cidade = consulta.cidade,
+                        UF = consulta.uf
+                    };
+                }
+            }
+            return View(cep);
         }
 
         public IActionResult Privacy()
